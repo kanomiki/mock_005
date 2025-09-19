@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>製品契約情報API テスト</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 150px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ffeaa7;
+        }
+        .response-section {
+            margin-top: 30px;
+        }
+        .json-display {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .tabs {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-right: 10px;
+        }
+        .tab.active {
+            border-bottom-color: #007bff;
+            color: #007bff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .device-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fafafa;
+        }
+        .status-ok {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-ng {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .cors-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .cors-info h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>製品契約情報API テスト</h1>
+        
+        <div class="cors-info">
+            <h3>📌 CORS について</h3>
+            <p>ブラウザから直接AWS API Gatewayを呼び出す際、CORS（Cross-Origin Resource Sharing）エラーが発生する可能性があります。</p>
+            <p><strong>解決方法：</strong></p>
+            <ul>
+                <li>API Gateway でCORSを有効にする</li>
+                <li>Lambda関数のレスポンスにCORSヘッダーを追加する</li>
+                <li>または、プロキシサーバーを経由してAPIを呼び出す</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label for="apiUrl">API Gateway URL:</label>
+            <input type="url" id="apiUrl" placeholder="https://your-api-id.execute-api.region.amazonaws.com/stage/your-endpoint" required>
+        </div>
+
+        <div class="form-group">
+            <label for="clientSystem">クライアントシステムコード:</label>
+            <select id="clientSystem">
+                <option value="MCLS">MCLS</option>
+                <option value="MELく～るLINKシステム">MELく～るLINKシステム</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="deviceId">デバイスID:</label>
+            <input type="text" id="deviceId" value="AC-UNIT-01_SN-2025A" placeholder="AC-UNIT-01_SN-2025A">
+        </div>
+
+        <div class="form-group">
+            <label for="requestJson">リクエストJSON (編集可能):</label>
+            <textarea id="requestJson"></textarea>
+        </div>
+
+        <button onclick="updateJsonFromForm()">フォームから更新</button>
+        <button onclick="sendRequest()" id="sendBtn">APIを呼び出す</button>
+        <button onclick="loadSampleData()">サンプルデータを読み込み</button>
+        <button onclick="clearResults()">結果をクリア</button>
+
+        <div class="response-section" id="responseSection" style="display: none;">
+            <h2>レスポンス結果</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('formatted')">整形表示</button>
+                <button class="tab" onclick="showTab('raw')">RAWデータ</button>
+                <button class="tab" onclick="showTab('table')">テーブル表示</button>
+            </div>
+
+            <div id="formatted" class="tab-content active">
+                <div id="formattedResponse"></div>
+            </div>
+
+            <div id="raw" class="tab-content">
+                <div class="json-display" id="rawResponse"></div>
+            </div>
+
+            <div id="table" class="tab-content">
+                <div id="tableResponse"></div>
+            </div>
+        </div>
+
+        <div id="errorSection" style="display: none;">
+            <h2>エラー情報</h2>
+            <div id="errorDetails" class="error"></div>
+        </div>
+    </div>
+
+    <script>
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateJsonFromForm();
+        });
+
+        // フォームからJSONを更新
+        function updateJsonFromForm() {
+            const clientSystem = document.getElementById('clientSystem').value;
+            const deviceId = document.getElementById('deviceId').value;
+            
+            const requestData = {
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": {
+                    "clientSystemCode": clientSystem,
+                    "deviceList": [
+                        { "deviceId": deviceId }
+                    ]
+                }
+            };
+            
+            document.getElementById('requestJson').value = JSON.stringify(requestData, null, 2);
+        }
+
+        // サンプルデータを読み込み
+        function loadSampleData() {
+            const sampleData = {
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "body": {
+                    "clientSystemCode": "MCLS",
+                    "deviceList": [
+                        { "deviceId": "AC-UNIT-01_SN-2025A" },
+                        { "deviceId": "AC-UNIT-02_SN-2025B" },
+                        { "deviceId": "HEATPUMP-01_SN-HP2025" }
+                    ]
+                }
+            };
+            
+            document.getElementById('requestJson').value = JSON.stringify(sampleData, null, 2);
+            document.getElementById('clientSystem').value = "MCLS";
+            document.getElementById('deviceId').value = "AC-UNIT-01_SN-2025A";
+        }
+
+        // APIリクエストを送信
+        async function sendRequest() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const requestJsonText = document.getElementById('requestJson').value;
+            
+            if (!apiUrl) {
+                alert('API Gateway URLを入力してください');
+                return;
+            }
+
+            let requestData;
+            try {
+                requestData = JSON.parse(requestJsonText);
+            } catch (e) {
+                alert('不正なJSON形式です: ' + e.message);
+                return;
+            }
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '送信中...';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // CORS対応
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+                        'Access-Control-Allow-Headers': 'Content-Type'
+                    },
+                    body: JSON.stringify(requestData.body)
+                });
+
+                const responseData = await response.json();
+                
+                // レスポンス表示
+                displayResponse(responseData, response.status);
+                
+                // エラーセクションを非表示
+                document.getElementById('errorSection').style.display = 'none';
+                
+            } catch (error) {
+                console.error('API呼び出しエラー:', error);
+                displayError(error);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'APIを呼び出す';
+            }
+        }
+
+        // レスポンス表示
+        function displayResponse(data, statusCode) {
+            document.getElementById('responseSection').style.display = 'block';
+            
+            // RAWデータ表示
+            document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+            
+            // 整形表示
+            displayFormattedResponse(data, statusCode);
+            
+            // テーブル表示
+            displayTableResponse(data);
+        }
+
+        // 整形されたレスポンス表示
+        function displayFormattedResponse(data, statusCode) {
+            const container = document.getElementById('formattedResponse');
+            container.innerHTML = '';
+            
+            // ステータス表示
+            const statusDiv = document.createElement('div');
+            statusDiv.className = statusCode >= 200 && statusCode < 300 ? 'success' : 'error';
+            statusDiv.innerHTML = `<strong>HTTPステータス:</strong> ${statusCode}`;
+            container.appendChild(statusDiv);
+            
+            // データ解析
+            if (data && data.res && data.res.body) {
+                try {
+                    const parsedBody = JSON.parse(data.res.body);
+                    displayDeviceList(parsedBody, container);
+                } catch (e) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error';
+                    errorDiv.textContent = 'レスポンスの解析に失敗しました: ' + e.message;
+                    container.appendChild(errorDiv);
+                }
+            } else {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'warning';
+                warningDiv.textContent = '期待されるレスポンス形式ではありません';
+                container.appendChild(warningDiv);
+            }
+        }
+
+        // デバイスリスト表示
+        function displayDeviceList(data, container) {
+            if (data.deviceList && Array.isArray(data.deviceList)) {
+                const devicesDiv = document.createElement('div');
+                devicesDiv.innerHTML = `<h3>デバイス情報 (${data.deviceList.length}件)</h3>`;
+                
+                data.deviceList.forEach((device, index) => {
+                    const deviceCard = document.createElement('div');
+                    deviceCard.className = 'device-card';
+                    
+                    let deviceInfo = '';
+                    if (device.body) {
+                        try {
+                            const deviceData = JSON.parse(device.body);
+                            if (deviceData.found) {
+                                const found = deviceData.found;
+                                deviceInfo = `
+                                    <h4>デバイス ${index + 1}</h4>
+                                    <p><strong>デバイスID:</strong> ${found.deviceId}</p>
+                                    <p><strong>ステータス:</strong> <span class="status-${found.deviceStatus.toLowerCase()}">${found.deviceStatus}</span></p>
+                                    <p><strong>警告情報:</strong> ${found.warningInfo || 'なし'}</p>
+                                    <p><strong>契約数:</strong> ${found.contractList ? found.contractList.length : 0}</p>
+                                    <p><strong>再契約期限:</strong> ${found.extendMcls ? found.extendMcls.reContractExpire : 'N/A'}</p>
+                                    <p><strong>メモ:</strong> ${found.extendMcls ? found.extendMcls.deviceMemo : 'N/A'}</p>
+                                `;
+                            }
+                        } catch (e) {
+                            deviceInfo = `<p>デバイス情報の解析エラー: ${e.message}</p>`;
+                        }
+                    } else {
+                        deviceInfo = `
+                            <h4>デバイス ${index + 1}</h4>
+                            <p><strong>デバイスID:</strong> ${device.deviceId || 'N/A'}</p>
+                            <p><strong>ステータス:</strong> <span class="status-${(device.deviceStatus || 'unknown').toLowerCase()}">${device.deviceStatus || 'N/A'}</span></p>
+                        `;
+                    }
+                    
+                    deviceCard.innerHTML = deviceInfo;
+                    devicesDiv.appendChild(deviceCard);
+                });
+                
+                container.appendChild(devicesDiv);
+            } else if (data.message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'warning';
+                messageDiv.innerHTML = `<strong>メッセージ:</strong> ${data.message}`;
+                container.appendChild(messageDiv);
+            }
+        }
+
+        // テーブル表示
+        function displayTableResponse(data) {
+            const container = document.getElementById('tableResponse');
+            container.innerHTML = '';
+            
+            if (data && data.res && data.res.body) {
+                try {
+                    const parsedBody = JSON.parse(data.res.body);
+                    if (parsedBody.deviceList && Array.isArray(parsedBody.deviceList)) {
+                        const table = document.createElement('table');
+                        table.innerHTML = `
+                            <thead>
+                                <tr>
+                                    <th>デバイスID</th>
+                                    <th>ステータス</th>
+                                    <th>契約数</th>
+                                    <th>警告情報</th>
+                                    <th>再契約期限</th>
+                                    <th>メモ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deviceTableBody">
+                            </tbody>
+                        `;
+                        
+                        const tbody = table.querySelector('#deviceTableBody');
+                        parsedBody.deviceList.forEach(device => {
+                            let deviceData = device;
+                            if (device.body) {
+                                try {
+                                    const parsed = JSON.parse(device.body);
+                                    if (parsed.found) {
+                                        deviceData = parsed.found;
+                                    }
+                                } catch (e) {
+                                    // パースエラーの場合は元のデータを使用
+                                }
+                            }
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${deviceData.deviceId || 'N/A'}</td>
+                                <td><span class="status-${(deviceData.deviceStatus || 'unknown').toLowerCase()}">${deviceData.deviceStatus || 'N/A'}</span></td>
+                                <td>${deviceData.contractList ? deviceData.contractList.length : 'N/A'}</td>
+                                <td>${deviceData.warningInfo || 'なし'}</td>
+                                <td>${deviceData.extendMcls ? deviceData.extendMcls.reContractExpire : 'N/A'}</td>
+                                <td>${deviceData.extendMcls ? deviceData.extendMcls.deviceMemo : 'N/A'}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                        
+                        container.appendChild(table);
+                    } else {
+                        container.innerHTML = '<p>テーブル表示用のデータがありません</p>';
+                    }
+                } catch (e) {
+                    container.innerHTML = `<p>データの解析エラー: ${e.message}</p>`;
+                }
+            } else {
+                container.innerHTML = '<p>レスポンスデータがありません</p>';
+            }
+        }
+
+        // エラー表示
+        function displayError(error) {
+            document.getElementById('errorSection').style.display = 'block';
+            document.getElementById('responseSection').style.display = 'none';
+            
+            let errorMessage = '';
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage = `
+                    <h3>接続エラー</h3>
+                    <p><strong>原因:</strong> API URLへの接続に失敗しました。</p>
+                    <p><strong>考えられる理由:</strong></p>
+                    <ul>
+                        <li>URLが間違っている</li>
+                        <li>CORS設定が正しくない</li>
+                        <li>ネットワーク接続の問題</li>
+                        <li>API Gateway/Lambda関数が停止している</li>
+                    </ul>
+                    <p><strong>技術的詳細:</strong> ${error.message}</p>
+                `;
+            } else {
+                errorMessage = `
+                    <h3>エラーが発生しました</h3>
+                    <p><strong>エラー名:</strong> ${error.name || 'Unknown'}</p>
+                    <p><strong>エラーメッセージ:</strong> ${error.message || 'Unknown error'}</p>
+                `;
+            }
+            
+            document.getElementById('errorDetails').innerHTML = errorMessage;
+        }
+
+        // タブ切り替え
+        function showTab(tabName) {
+            // すべてのタブコンテンツを非表示
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // すべてのタブボタンを非アクティブ
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // 選択されたタブを表示
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 結果をクリア
+        function clearResults() {
+            document.getElementById('responseSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'none';
+        }
+
+        // フォーム要素の変更を監視
+        document.getElementById('clientSystem').addEventListener('change', updateJsonFromForm);
+        document.getElementById('deviceId').addEventListener('input', updateJsonFromForm);
+    </script>
+</body>
+</html>
